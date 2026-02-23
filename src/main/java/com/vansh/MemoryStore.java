@@ -2,9 +2,9 @@ package com.vansh;
 // memory handling
 import java.util.*;
 import com.google.api.core.ApiFuture;
+import com.google.cloud.firestore.DocumentReference;
+import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
-import com.google.cloud.firestore.QueryDocumentSnapshot;
-import com.google.cloud.firestore.QuerySnapshot;
 
 public class MemoryStore {
     private static final String COLLECTION = "memory";
@@ -13,18 +13,19 @@ public class MemoryStore {
         FirestoreConfig.initFirestore();
     }
     
-    public static List<Map<String, String>> load() {
+    public static List<Map<String, String>> load(String email) {
         List<Map<String, String>> memory = new ArrayList<>();
         Firestore firestore = FirestoreConfig.getFirestore();
 
         try {
-            ApiFuture<QuerySnapshot> query = firestore.collection(COLLECTION).get();
-            List<QueryDocumentSnapshot> documents = query.get().getDocuments();
-            for (QueryDocumentSnapshot doc : documents) {
-                memory.add(Map.of(
-                    "role", doc.getString("role"),
-                    "content", doc.getString("content")
-                ));
+            DocumentReference docRef = firestore.collection(COLLECTION).document(email);
+            ApiFuture<DocumentSnapshot> future = docRef.get();
+            DocumentSnapshot doc = future.get();
+            if (doc.exists()) {
+                List<Map<String, String>> messages = (List<Map<String, String>>) doc.get("messages");
+                if (messages != null) {
+                    memory.addAll(messages);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -33,15 +34,15 @@ public class MemoryStore {
         return memory;
     }
 
-    public static void save(List<Map<String, String>> memory) throws Exception {
+    public static void save(String email, List<Map<String, String>> memory) {
         Firestore firestore = FirestoreConfig.getFirestore();
 
-        for (Map<String, String> msg : memory) {
-            try {
-                firestore.collection(COLLECTION).add(msg).get();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        try {
+            DocumentReference docRef = firestore.collection(COLLECTION).document(email);
+            Map<String, Object> data = Map.of("messages", memory);
+            docRef.set(data);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

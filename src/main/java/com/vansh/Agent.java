@@ -14,30 +14,33 @@ public class Agent {
         Scanner sc = new Scanner(System.in);
         System.out.println("Java AI Agent (type 'exit' to quit)\n");
 
-        while(true) {
+        // Ask for email
+        System.out.print("Enter your email ID: ");
+        String email = sc.nextLine().trim();
+        if (email.isEmpty()) {
+            System.out.println("Email is mandatory!");
+            return;
+        }
+
+        while (true) {
             System.out.print("You: ");
             String in = sc.nextLine();
-            if ("exit".equalsIgnoreCase(in)) {
-                break;
-            }
-            List<Map<String, String>> memory = MemoryStore.load();
-            List<Map<String, String>> messages = new ArrayList<>();
-            messages.add(Map.of(
-                "role", "system",
-                "content", "You are a helpful assistant."
-            ));
-            messages.addAll(memory);
-            messages.add(Map.of(
-                "role", "user",
-                "content", in
-            ));
-            
-            String reply = LLMClient.chat(messages);
-            System.out.println("Agent: " + reply);
+            if ("exit".equalsIgnoreCase(in)) break;
 
+            List<Map<String, String>> memory = MemoryStore.load(email);
+
+            List<Map<String, String>> messages = new ArrayList<>();
+            messages.add(Map.of("role", "system", "content", "You are a helpful assistant."));
+            messages.addAll(memory);
+            messages.add(Map.of("role", "user", "content", in));
+
+            String reply = LLMClient.chat(messages);
+
+            System.out.println("Agent: " + reply);
+            
             memory.add(Map.of("role", "user", "content", in));
             memory.add(Map.of("role", "assistant", "content", reply));
-            MemoryStore.save(memory);
+            MemoryStore.save(email, memory);
         }
     }
 }
