@@ -12,7 +12,6 @@ public class LLMClient {
 
     public static String chat(List<Map<String, String>> messages) throws Exception {
         String apiKey = Config.getHFKey();
-        System.out.println("HF Key loaded: " + (apiKey != null));
 
         List<Map<String, String>> hfMessages = new ArrayList<>();
         for (Map<String, String> m : messages) {
@@ -38,8 +37,6 @@ public class LLMClient {
 
         HttpResponse<String> response = client
                 .send(request, HttpResponse.BodyHandlers.ofString());
-
-        System.out.println("RAW RESPONSE: " + response.body());
 
         JsonNode root = mapper.readTree(response.body());
         if (root.has("choices") && root.get("choices").size() > 0) {

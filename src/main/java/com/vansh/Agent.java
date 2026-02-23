@@ -20,16 +20,7 @@ public class Agent {
             if ("exit".equalsIgnoreCase(in)) {
                 break;
             }
-            //1. Load memory
             List<Map<String, String>> memory = MemoryStore.load();
-            System.out.println("Memory so far:");
-
-            for (Map<String, String> message : memory) {
-                String role = message.get("role");
-                String content = message.get("content");
-                System.out.println(role + ": " + content);
-            }
-            //2. Build prompt
             List<Map<String, String>> messages = new ArrayList<>();
             messages.add(Map.of(
                 "role", "system",
@@ -41,12 +32,9 @@ public class Agent {
                 "content", in
             ));
             
-            //3. Call LLM
             String reply = LLMClient.chat(messages);
-            //4. Output
             System.out.println("Agent: " + reply);
 
-            //5. Save memory
             memory.add(Map.of("role", "user", "content", in));
             memory.add(Map.of("role", "assistant", "content", reply));
             MemoryStore.save(memory);
